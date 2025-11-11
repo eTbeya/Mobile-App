@@ -3,25 +3,20 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <title>Продажби & Хляб – PWA (Index)</title>
+  <title>Продажби & Хляб – PWA</title>
 
-  <!-- iOS helpers (PWA installable when manifest+SW are present in repo) -->
+  <!-- iOS / PWA -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Продажби">
-
-  <!-- Theme (light) -->
   <meta name="theme-color" content="#ffffff"/>
-  <!-- PWA manifest -->
-<link rel="manifest" href="/Mobile-App/manifest.webmanifest">
 
-<!-- iOS full-app icon -->
-<link rel="apple-touch-icon" href="/Mobile-App/icons/apple-touch-icon.png">
+  <!-- ✅ Правилни пътища за root -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 
-
-  <!-- Bootstrap 5 -->
+  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
   <style>
@@ -40,633 +35,672 @@
     .footer-actions{ position:sticky; bottom:0; background:linear-gradient(to top, #fff, #ffffffcc); padding:1rem; border-top:1px solid #eee; }
     .form-text-muted{ color:var(--muted); font-size:.875rem; }
     .lock-badge{ font-size:.9rem; }
-    .table td, .table th { vertical-align: middle; }
   </style>
 </head>
+
 <body>
-  <div class="app-container">
-    <header class="d-flex justify-content-between align-items-center mb-3">
-      <div>
-        <h1 class="h4 m-0">Продажби & Хляб</h1>
-        <div class="form-text-muted">Лека светла тема • Локално запазване • iOS‑инсталиране (с манифест+SW)</div>
-      </div>
-      <div class="text-end">
-        <input type="date" id="datePicker" class="form-control form-control-sm mb-2" />
-        <div class="d-flex gap-2 justify-content-end">
-          <span id="lockState" class="badge text-bg-light lock-badge">Ден: отключен</span>
-          <button class="btn btn-outline-secondary btn-sm" id="openAdmin"><i class="bi bi-shield-lock"></i> Admin</button>
-        </div>
-      </div>
-    </header>
+<div class="app-container">
 
-    <!-- Icon Nav Rail -->
-    <nav class="nav-rail mb-3" id="navRail">
-      <button class="btn btn-outline-secondary btn-icon active" data-target="sales" data-section="section-sales" title="Продажба"><i class="bi bi-cash-stack"></i></button>
-      <button class="btn btn-outline-secondary btn-icon" data-target="breadWaste" data-section="section-breadWaste" title="Брак хляб"><i class="bi bi-basket3"></i></button>
-      <button class="btn btn-outline-secondary btn-icon" data-target="delivery" data-section="section-delivery" title="Доставка"><i class="bi bi-truck"></i></button>
-      <button class="btn btn-outline-secondary btn-icon" data-target="deliveryWaste" data-section="section-deliveryWaste" title="Брак артикули"><i class="bi bi-x-octagon"></i></button>
-      <button class="btn btn-outline-secondary btn-icon" data-target="days" data-section="section-days" title="Архив"><i class="bi bi-calendar2-week"></i></button>
-      <button class="btn btn-outline-secondary btn-icon" data-target="settings" data-section="section-settings" title="Настройки"><i class="bi bi-gear"></i></button>
-    </nav>
-
-    <!-- Sections -->
-    <section id="section-sales" class="section active">
-      <div class="card p-3">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h2 class="h5 m-0">1) Продажба</h2>
-          <button id="addSaleRow" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> Добави ред</button>
-        </div>
-        <div class="accordion" id="salesAcc"></div>
-        <hr>
-        <div class="d-flex justify-content-between"><span>Общ краен оборот:</span><span class="totals"><span id="salesTotal">0.00</span> лв</span></div>
-        <div class="form-text-muted mt-2">Бракът се изважда автоматично от оборота за всеки ред.</div>
-      </div>
-    </section>
-
-    <section id="section-breadWaste" class="section">
-      <div class="card p-3">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h2 class="h5 m-0">2) Брак хляб</h2>
-          <button id="addBreadRow" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> Добави магазин</button>
-        </div>
-        <div class="accordion" id="breadAcc"></div>
-        <hr>
-        <div class="d-flex justify-content-between"><span>Общ сбор (всички магазини):</span><span class="totals"><span id="breadTotal">0.00</span> лв</span></div>
-        <div class="form-text-muted mt-2">Този брак <u>не</u> се спада от крайния оборот.</div>
-      </div>
-    </section>
-
-    <section id="section-delivery" class="section">
-      <div class="card p-3">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h2 class="h5 m-0">3) Доставка</h2>
-          <button id="addDeliveryRow" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> Добави ред</button>
-        </div>
-        <div class="table-responsive">
-          <table class="table align-middle">
-            <thead><tr><th>Артикул</th><th>Бр.</th><th>Цена</th><th>Общо</th><th></th></tr></thead>
-            <tbody id="deliveryBody"></tbody>
-          </table>
-        </div>
-        <div class="d-flex justify-content-between"><span>Общо доставки:</span><span class="totals"><span id="deliveryTotal">0.00</span> лв</span></div>
-      </div>
-    </section>
-
-    <section id="section-deliveryWaste" class="section">
-      <div class="card p-3">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h2 class="h5 m-0">4) Брак (артикули от доставка)</h2>
-          <button id="addDWRow" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg"></i> Добави ред</button>
-        </div>
-        <div class="table-responsive">
-          <table class="table align-middle">
-            <thead><tr><th>Артикул</th><th>Бр.</th><th>Цена</th><th>Общо</th><th></th></tr></thead>
-            <tbody id="dwBody"></tbody>
-          </table>
-        </div>
-        <div class="d-flex justify-content-between"><span>Общо брак (артикули):</span><span class="totals"><span id="dwTotal">0.00</span> лв</span></div>
-      </div>
-    </section>
-
-    <section id="section-days" class="section">
-      <div class="card p-3">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <h2 class="h5 m-0">Архив по дни & Анализ</h2>
-          <div class="d-flex gap-2">
-            <button id="saveDay" class="btn btn-success btn-sm"><i class="bi bi-save2"></i> Запази деня</button>
-            <button id="closeDay" class="btn btn-outline-danger btn-sm"><i class="bi bi-lock"></i> Приключи деня</button>
-            <button id="unlockDay" class="btn btn-outline-secondary btn-sm"><i class="bi bi-unlock"></i> Отключи</button>
-          </div>
-        </div>
-        <div class="row g-3">
-          <div class="col-12 col-lg-6">
-            <div class="table-responsive">
-              <table class="table"><thead><tr><th>Дата</th><th>Статус</th><th>Действия</th></tr></thead><tbody id="daysTable"></tbody></table>
-            </div>
-          </div>
-          <div class="col-12 col-lg-6">
-            <div class="border rounded p-3 h-100">
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <strong>Анализ (само раздел 1 – Продажба)</strong>
-                <div class="btn-group btn-group-sm" role="group">
-                  <input type="radio" class="btn-check" name="range" id="rWeek" autocomplete="off" checked>
-                  <label class="btn btn-outline-primary" for="rWeek">Седмица</label>
-                  <input type="radio" class="btn-check" name="range" id="rMonth" autocomplete="off">
-                  <label class="btn btn-outline-primary" for="rMonth">Месец</label>
-                </div>
-              </div>
-              <div class="row g-2 mb-2">
-                <div class="col-6"><input type="date" class="form-control form-control-sm" id="fromDate"></div>
-                <div class="col-6"><input type="date" class="form-control form-control-sm" id="toDate"></div>
-              </div>
-              <div class="small text-muted mb-2">Сумира Оборот (gross), Брак (waste) и Нетно (net) от секция „Продажба“.</div>
-              <div id="analyticsBox" class="bg-light rounded p-2 small">
-                <div>Оборот без брак (gross): <strong id="anGross">0.00</strong> лв</div>
-                <div>Само брак (waste): <strong id="anWaste">0.00</strong> лв</div>
-                <div>Краен оборот (net): <strong id="anNet">0.00</strong> лв</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="section-settings" class="section">
-      <div class="card p-3">
-        <h2 class="h5">Настройки / Импорт / Експорт</h2>
-        <div class="d-flex gap-2 flex-wrap mb-2">
-          <button id="exportBtn" class="btn btn-outline-primary"><i class="bi bi-download"></i> Експорт JSON</button>
-          <label class="btn btn-outline-secondary mb-0"><i class="bi bi-upload"></i> Импорт JSON <input id="importInput" type="file" accept="application/json" hidden></label>
-          <button id="wipeAll" class="btn btn-outline-danger"><i class="bi bi-trash3"></i> Изтрий всички данни (локални)</button>
-          <button id="openAdmin2" class="btn btn-outline-secondary"><i class="bi bi-shield-lock"></i> Admin панел</button>
-        </div>
-        <p class="form-text-muted m-0">Данните се пазят само локално (LocalStorage).</p>
-      </div>
-    </section>
-
-    <div class="footer-actions d-flex justify-content-between align-items-center mt-3">
-      <span class="form-text-muted">Съвет: използвай иконите горе за превключване на разделите.</span>
-      <button class="btn btn-primary" id="reviewBtn"><i class="bi bi-eye"></i> Преглед на деня</button>
-    </div>
+<header class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h4 m-0">Продажби & Хляб</h1>
+    <div class="form-text-muted">Леко приложение • локално • за ежедневна работа</div>
   </div>
 
-  <!-- Review Modal -->
-  <div class="modal fade" id="reviewModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">Обобщение за <span id="revDate"></span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body"><div id="reviewContent" class="small"></div></div>
-        <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Затвори</button></div>
-      </div>
+  <div class="text-end">
+    <input type="date" id="datePicker" class="form-control form-control-sm mb-2" />
+    <div class="d-flex gap-2 justify-content-end">
+      <span id="lockState" class="badge text-bg-light">Ден: отключен</span>
+      <button class="btn btn-outline-secondary btn-sm" id="openAdmin"><i class="bi bi-shield-lock"></i> Admin</button>
     </div>
   </div>
+</header>
 
-  <!-- Admin Panel Modal -->
-  <div class="modal fade" id="adminModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title"><i class="bi bi-shield-lock"></i> Админ панел</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <ul class="nav nav-tabs" role="tablist">
-            <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabVis">Видимост</button></li>
-            <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabReview">Преглед</button></li>
-            <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabPrices">Каталози & Цени</button></li>
-          </ul>
-          <div class="tab-content p-3 border border-top-0">
-            <div class="tab-pane fade show active" id="tabVis">
-              <div class="row g-2">
-                <div class="col-12"><strong>Показвани секции:</strong></div>
-                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input vis" id="vis1" type="checkbox" data-section="section-sales"><label for="vis1" class="form-check-label">Продажба</label></div></div>
-                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input vis" id="vis2" type="checkbox" data-section="section-breadWaste"><label for="vis2" class="form-check-label">Брак хляб</label></div></div>
-                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input vis" id="vis3" type="checkbox" data-section="section-delivery"><label for="vis3" class="form-check-label">Доставка</label></div></div>
-                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input vis" id="vis4" type="checkbox" data-section="section-deliveryWaste"><label for="vis4" class="form-check-label">Брак артикули</label></div></div>
-                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input vis" id="vis5" type="checkbox" data-section="section-days"><label for="vis5" class="form-check-label">Архив по дни</label></div></div>
-                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input vis" id="vis6" type="checkbox" data-section="section-settings"><label for="vis6" class="form-check-label">Настройки</label></div></div>
-              </div>
-            </div>
-            <div class="tab-pane fade" id="tabReview">
-              <div class="row g-2">
-                <div class="col-12"><strong>Какво да показва прозорецът „Преглед на деня“:</strong></div>
-                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input rev" id="revSales" type="checkbox" data-key="sales"><label for="revSales" class="form-check-label">Продажба</label></div></div>
-                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input rev" id="revBW" type="checkbox" data-key="breadWaste"><label for="revBW" class="form-check-label">Брак хляб</label></div></div>
-                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input rev" id="revDel" type="checkbox" data-key="delivery"><label for="revDel" class="form-check-label">Доставка</label></div></div>
-                <div class="col-6 col-md-4"><div class="form-check"><input class="form-check-input rev" id="revDW" type="checkbox" data-key="deliveryWaste"><label for="revDW" class="form-check-label">Брак артикули</label></div></div>
-              </div>
-            </div>
-            <div class="tab-pane fade" id="tabPrices">
-              <div class="mb-3">
-                <div class="d-flex justify-content-between align-items-center">
-                  <h6 class="m-0">Видове хляб</h6>
-                  <button class="btn btn-sm btn-outline-primary" id="addBreadType"><i class="bi bi-plus"></i> Добави</button>
-                </div>
-                <div class="table-responsive"><table class="table table-sm" id="breadTypesTbl"><thead><tr><th>Име</th><th>Цена (лв)</th><th></th></tr></thead><tbody></tbody></table></div>
-              </div>
-              <div>
-                <div class="d-flex justify-content-between align-items-center">
-                  <h6 class="m-0">Артикули за доставка</h6>
-                  <button class="btn btn-sm btn-outline-primary" id="addDeliveryItem"><i class="bi bi-plus"></i> Добави</button>
-                </div>
-                <div class="table-responsive"><table class="table table-sm" id="deliveryItemsTbl"><thead><tr><th>Име</th><th>Цена (лв)</th><th></th></tr></thead><tbody></tbody></table></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" data-bs-dismiss="modal">Затвори</button>
-          <button class="btn btn-primary" id="saveAdmin">Запази промените</button>
+<nav class="nav-rail mb-3" id="navRail">
+  <button class="btn btn-outline-secondary btn-icon active" data-target="sales"><i class="bi bi-cash-stack"></i></button>
+  <button class="btn btn-outline-secondary btn-icon" data-target="breadWaste"><i class="bi bi-basket3"></i></button>
+  <button class="btn btn-outline-secondary btn-icon" data-target="delivery"><i class="bi bi-truck"></i></button>
+  <button class="btn btn-outline-secondary btn-icon" data-target="deliveryWaste"><i class="bi bi-x-octagon"></i></button>
+  <button class="btn btn-outline-secondary btn-icon" data-target="days"><i class="bi bi-calendar2-week"></i></button>
+  <button class="btn btn-outline-secondary btn-icon" data-target="settings"><i class="bi bi-gear"></i></button>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* === CONFIG / STORAGE KEYS === */
+const CFG_KEY = 'pwa-sales-bread-config-v1';
+const DATA_KEY = 'pwa-sales-bread-days-v2';
+const LAST_OPEN_KEY = 'pwa-sales-bread-lastopen';
+const ADMIN_PIN = '5384';
+
+/* === DEFAULT CONFIG === */
+const DEFAULT_CONFIG = {
+  showSections: {
+    'sales': true,
+    'breadWaste': true,
+    'delivery': true,
+    'deliveryWaste': true,
+    'days': true,
+    'settings': true,
+  },
+  reviewShow: { sales:true, breadWaste:true, delivery:true, deliveryWaste:true },
+  breadTypes: [
+    {name:'Базлама', price:2.00},
+    {name:'Мини Базлама', price:3.30},
+    {name:'Занат.-бял', price:1.90},
+    {name:'Занат.-фибри', price:1.90},
+    {name:'Занат.-ръжен', price:1.90},
+    {name:'Занат.-многозърнест', price:1.90},
+    {name:'Ръчен селски', price:1.80},
+    {name:'Лимец и закваска', price:1.90},
+  ],
+  deliveryItems: [
+    {name:'Базлама', price:1.65},
+    {name:'Мини Базлама', price:0.55},
+  ]
+};
+
+/* === HELPERS === */
+const fmt = n => (Number(n)||0).toFixed(2);
+const el = (s, r=document)=>r.querySelector(s);
+const els = (s, r=document)=>Array.from(r.querySelectorAll(s));
+const todayISO = ()=> new Date().toISOString().slice(0,10);
+
+/* LOAD CONFIG */
+function getCfg(){ try{return JSON.parse(localStorage.getItem(CFG_KEY))||structuredClone(DEFAULT_CONFIG);}catch{return structuredClone(DEFAULT_CONFIG);} }
+function saveCfg(){ localStorage.setItem(CFG_KEY, JSON.stringify(CFG)); }
+let CFG = getCfg();
+
+/* LOAD DATA */
+let days = JSON.parse(localStorage.getItem(DATA_KEY)||'{}');
+function blankDay(date){ return { date, locked:false, sales:[], breadWaste:[], delivery:[], deliveryWaste:[] }; }
+function current(){ return getDay(el('#datePicker').value); }
+function getDay(date){ if(!days[date]) days[date]=blankDay(date); return days[date]; }
+function saveAll(){ localStorage.setItem(DATA_KEY, JSON.stringify(days)); refreshDaysTable(); syncLockState(); }
+
+/* DATE PICKER INIT */
+const datePicker = el('#datePicker');
+const last = localStorage.getItem(LAST_OPEN_KEY);
+const today = todayISO();
+datePicker.value = (!last || last !== today) ? today : last;
+localStorage.setItem(LAST_OPEN_KEY, datePicker.value);
+
+/* NAVIGATION */
+els('#navRail .btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    els('#navRail .btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    els('.section').forEach(s=>s.classList.remove('active'));
+    el(`#section-${btn.dataset.target}`).classList.add('active');
+  });
+});
+
+/* SECTION VISIBILITY APPLY */
+function applyVisibility(){
+  Object.entries(CFG.showSections).forEach(([sec,show])=>{
+    const sectionEl = el(`#section-${sec}`);
+    const navBtn = els('#navRail .btn').find(b=>b.dataset.target===sec);
+    if(sectionEl) sectionEl.style.display = show ? '' : 'none';
+    if(navBtn) navBtn.style.display = show ? '' : 'none';
+  });
+}
+
+/* === LOCK / UNLOCK (Read-Only Mode) === */
+function syncLockState(){
+  const d = current();
+  const locked = d.locked;
+  el('#lockState').textContent = locked ? 'Ден: заключен' : 'Ден: отключен';
+  el('#lockState').className = 'badge ' + (locked?'text-bg-warning':'text-bg-light');
+
+  // Read-only mode only, UI stays active.
+  const sections = ['sales','breadWaste','delivery','deliveryWaste'];
+  sections.forEach(sec=>{
+    els(`#section-${sec} input, #section-${sec} select, #section-${sec} textarea`)
+      .forEach(i=> i.readOnly = locked);
+  });
+}
+// END PART 2A
+/* === SALES (Продажба) === */
+const salesAcc = el('#salesAcc');
+el('#addSaleRow').addEventListener('click',()=> addSaleRow());
+
+function addSaleRow(data={shop:'',gross:0,waste:0,note:''}, push=true){
+  const day=current();
+  const record = push ? (day.sales.push({...data, net:0}), day.sales[day.sales.length-1]) : data;
+  const idx = day.sales.indexOf(record);
+  const id = 'sale'+idx;
+
+  const card = document.createElement('div');
+  card.className='accordion-item';
+  card.innerHTML=`
+    <h2 class="accordion-header" id="${id}-h">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${id}-c">
+        <span class="me-2 pill">#${idx+1}</span>
+        <span class="me-2 shop-name">${record.shop||'Магазин'}</span>
+        <span class="ms-auto">Нетно: <strong><span class="net">0.00</span> лв</strong></span>
+      </button>
+    </h2>
+    <div id="${id}-c" class="accordion-collapse collapse" data-bs-parent="#salesAcc">
+      <div class="accordion-body">
+        <div class="row g-2">
+          <div class="col-12 col-md-4"><input class="form-control shop" placeholder="Име на магазин" value="${record.shop}"></div>
+          <div class="col-6 col-md-3"><input class="form-control gross" type="number" step="0.01" placeholder="Оборот" value="${record.gross}"></div>
+          <div class="col-6 col-md-3"><input class="form-control waste" type="number" step="0.01" placeholder="Брак" value="${record.waste}"></div>
+          <div class="col-12 col-md-2 d-grid"><button class="btn btn-outline-danger remove"><i class="bi bi-trash"></i></button></div>
+          <div class="col-12"><textarea class="form-control note" rows="2" placeholder="Бележка">${record.note}</textarea></div>
         </div>
       </div>
-    </div>
-  </div>
+    </div>`;
+  salesAcc.appendChild(card);
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    // === CONFIG / DATA KEYS ===
-    const CFG_KEY = 'pwa-sales-bread-config-v1';
-    const DATA_KEY = 'pwa-sales-bread-days-v2'; // v2 fixes hydration & duplication
-    const LAST_OPEN_KEY = 'pwa-sales-bread-lastopen';
+  const shopI = el('.shop',card), grossI = el('.gross',card), wasteI = el('.waste',card), noteI = el('.note',card);
+  const netSpan = el('.net',card), shopLbl = el('.shop-name',card);
 
-    const DEFAULT_CONFIG = {
-      showSections: {
-        'section-sales': true,
-        'section-breadWaste': true,
-        'section-delivery': true,
-        'section-deliveryWaste': true,
-        'section-days': true,
-        'section-settings': true,
-      },
-      reviewShow: { sales:true, breadWaste:true, delivery:true, deliveryWaste:true },
-      breadTypes: [
-        {name:'Базлама', price:2.00},
-        {name:'Мини Базлама', price:3.30},
-        {name:'Занат.-бял', price:1.90},
-        {name:'Занат.-фибри', price:1.90},
-        {name:'Занат.-ръжен', price:1.90},
-        {name:'Занат.-многозърнест', price:1.90},
-        {name:'Ръчен селски', price:1.80},
-        {name:'Лимец и закваска', price:1.90},
-      ],
-      deliveryItems: [
-        {name:'Базлама', price:1.65},
-        {name:'Мини Базлама', price:0.55},
-      ]
-    };
+  function recalc(){
+    record.shop = shopI.value.trim();
+    record.gross = Number(grossI.value)||0;
+    record.waste = Number(wasteI.value)||0;
+    record.note = noteI.value;
+    record.net = Math.max(0, record.gross - record.waste);
+    netSpan.textContent = fmt(record.net);
+    shopLbl.textContent = record.shop||'Магазин';
+    updateSalesTotal();
+    saveAll();
+  }
+  [shopI,grossI,wasteI,noteI].forEach(i=>i.addEventListener('input',recalc));
+  el('.remove',card).addEventListener('click',()=>{
+    const pos = Array.from(salesAcc.children).indexOf(card);
+    day.sales.splice(pos,1);
+    card.remove();
+    updateSalesTotal();
+    saveAll();
+  });
+  recalc();
+}
 
-    // === Helpers ===
-    const fmt = n => (Number(n)||0).toFixed(2);
-    const el = (sel, root=document)=>root.querySelector(sel);
-    const els = (sel, root=document)=>Array.from(root.querySelectorAll(sel));
-    const todayISO = ()=> new Date().toISOString().slice(0,10);
-    const addDaysISO = (iso,days)=>{ const d=new Date(iso); d.setDate(d.getDate()+days); return d.toISOString().slice(0,10); };
+function updateSalesTotal(){
+  const total = current().sales.reduce((s,r)=>s+r.net,0);
+  el('#salesTotal').textContent = fmt(total);
+}
 
-    function getCfg(){ try{ return JSON.parse(localStorage.getItem(CFG_KEY)) || structuredClone(DEFAULT_CONFIG); } catch{ return structuredClone(DEFAULT_CONFIG); } }
-    function saveCfg(cfg){ localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
-    let CFG = getCfg();
+/* === BREAD WASTE (Брак хляб) === */
+const breadAcc = el('#breadAcc');
+el('#addBreadRow').addEventListener('click',()=> addBreadShop());
 
-    let days = JSON.parse(localStorage.getItem(DATA_KEY)||'{}');
-    function blankDay(date){ return { date, locked:false, sales:[], breadWaste:[], delivery:[], deliveryWaste:[] } }
-    function getDay(date){ if(!days[date]) days[date]=blankDay(date); return days[date]; }
-    function setDay(date, data){ days[date]=data; }
-    function saveAll(){ localStorage.setItem(DATA_KEY, JSON.stringify(days)); refreshDaysTable(); syncLockBadge(); }
+function addBreadShop(data={shop:'',lines:[]}, push=true){
+  const day=current();
+  const record = push ? (day.breadWaste.push({shop:data.shop||'', lines:[]}), day.breadWaste[day.breadWaste.length-1]) : data;
+  const idx = day.breadWaste.indexOf(record);
+  const id='bw'+idx;
 
-    // === UI INIT ===
-    const datePicker = el('#datePicker');
+  const card=document.createElement('div');
+  card.className='accordion-item';
+  card.innerHTML=`
+    <h2 class="accordion-header" id="${id}-h">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${id}-c">
+        <span class="me-2 pill">#${idx+1}</span>
+        <span class="me-2 shop-name">${record.shop||'Магазин'}</span>
+        <span class="ms-auto">Сума: <strong><span class="sum">0.00</span> лв</strong></span>
+      </button>
+    </h2>
+    <div id="${id}-c" class="accordion-collapse collapse" data-bs-parent="#breadAcc">
+      <div class="accordion-body">
+        <div class="row g-2 mb-2">
+          <div class="col-12 col-md-6"><input class="form-control shop" placeholder="Име на магазин" value="${record.shop}"></div>
+          <div class="col-12 col-md-6 text-end"><button class="btn btn-outline-primary addLine"><i class="bi bi-plus-lg"></i> Добави артикул</button></div>
+        </div>
+        <div class="lines"></div>
+        <div class="text-end mt-2">Междинна сума: <strong><span class="sum2">0.00</span> лв</strong></div>
+        <div class="text-end mt-2"><button class="btn btn-outline-danger remove"><i class="bi bi-trash"></i> Премахни магазин</button></div>
+      </div>
+    </div>`;
+  breadAcc.appendChild(card);
 
-    // Auto‑detect day: if last open < today, set to today
-    const lastOpen = localStorage.getItem(LAST_OPEN_KEY);
-    const today = todayISO();
-    if(!lastOpen || lastOpen !== today){ datePicker.value = today; localStorage.setItem(LAST_OPEN_KEY, today); }
-    else { datePicker.value = lastOpen; }
+  const shopI = el('.shop',card), shopLbl=el('.shop-name',card), sum=el('.sum',card), sum2=el('.sum2',card), linesWrap=el('.lines',card);
 
-    function current(){ return getDay(datePicker.value); }
+  function recompute(){
+    record.shop = shopI.value.trim();
+    shopLbl.textContent = record.shop || 'Магазин';
+    const total = (record.lines||[]).reduce((s,l)=>s+(Number(l.total)||0),0);
+    sum.textContent = fmt(total);
+    sum2.textContent = fmt(total);
+    updateBreadTotal();
+    saveAll();
+  }
 
-    function syncLockBadge(){
-      const locked = current().locked;
-      const badge = el('#lockState');
-      badge.textContent = locked ? 'Ден: заключен' : 'Ден: отключен';
-      badge.className = 'badge lock-badge ' + (locked ? 'text-bg-warning' : 'text-bg-light');
-      // Disable inputs if locked, but allow nav, review, admin, settings, export/import
-      els('input, select, textarea, button').forEach(b=>{
-        const allowIds = ['#saveDay','#closeDay','#unlockDay','#exportBtn','#importInput','#wipeAll','#openAdmin','#saveAdmin','#openAdmin2','#reviewBtn'];
-        const id = b.id?('#'+b.id):'';
-        const isModalClose = b.classList.contains('btn-close');
-        if(allowIds.includes(id) || isModalClose || b.closest('#section-days') || b.closest('#section-settings')){ b.disabled=false; return; }
-        b.disabled = locked;
-      });
-    }
+  el('.addLine',card).addEventListener('click',()=>{
+    record.lines.push({type:CFG.breadTypes[0]?.name||'', qty:0, unit:CFG.breadTypes[0]?.price||0, total:0});
+    makeBreadLineRow(linesWrap, record.lines, recompute);
+    recompute();
+  });
+  el('.remove',card).addEventListener('click',()=>{
+    const pos = Array.from(breadAcc.children).indexOf(card);
+    day.breadWaste.splice(pos,1);
+    card.remove();
+    updateBreadTotal();
+    saveAll();
+  });
+  shopI.addEventListener('input',recompute);
 
-    // === NAV & visibility ===
-    function applyVisibility(){
-      Object.entries(CFG.showSections).forEach(([sid,show])=>{
-        const sec=el('#'+sid); if(!sec) return; sec.style.display = show?'' : 'none';
-        els('#navRail .btn').forEach(btn=>{ if(btn.dataset.section===sid){ btn.style.display = show?'' : 'none'; }});
-      });
-      // ensure active button visible
-      const activeBtn = els('#navRail .btn').find(b=> b.classList.contains('active') && b.style.display!=='none');
-      if(!activeBtn){ const firstVisible = els('#navRail .btn').find(b=> b.style.display !== 'none'); if(firstVisible) firstVisible.click(); }
-    }
+  (data.lines||[]).forEach(l=>{
+    record.lines.push({...l});
+    makeBreadLineRow(linesWrap, record.lines, recompute);
+  });
+  recompute();
+}
 
-    els('.nav-rail .btn').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        els('.nav-rail .btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        els('.section').forEach(s=>s.classList.remove('active'));
-        el('#section-'+btn.dataset.target).classList.add('active');
-      })
-    });
+function makeBreadLineRow(container, lines, onChange){
+  const row = document.createElement('div');
+  row.className='row g-2 align-items-center mb-1';
+  row.innerHTML=`
+    <div class="col-6 col-md-4"><select class="form-select type"></select></div>
+    <div class="col-3 col-md-2"><input type="number" class="form-control qty" min="0" step="1"></div>
+    <div class="col-3 col-md-2"><input type="number" class="form-control unit" step="0.01"></div>
+    <div class="col-12 col-md-3 text-end"><span>Общо: <strong class="lineTotal">0.00</strong> лв</span></div>
+    <div class="col-12 col-md-1 d-grid"><button class="btn btn-outline-danger remove"><i class="bi bi-x"></i></button></div>`;
+  container.appendChild(row);
 
-    // === SALES (NO DUPES ON HYDRATE) ===
-    const salesAcc = el('#salesAcc');
-    el('#addSaleRow').addEventListener('click',()=> addSaleRow());
+  const typeSel = el('.type',row), qtyI=el('.qty',row), unitI=el('.unit',row), total=el('.lineTotal',row);
 
-    function addSaleRow(data={shop:'',gross:0,waste:0,note:''}, push=true){
-      const day=current();
-      const item = push ? (day.sales.push({shop:data.shop||'',gross:Number(data.gross)||0,waste:Number(data.waste)||0,note:data.note||'',net:0}), day.sales[day.sales.length-1])
-                        : data; // reuse reference
-      const idx = (day.sales.indexOf(item));
-      const id = 'sale'+idx;
+  function populate(){
+    typeSel.innerHTML='';
+    CFG.breadTypes.forEach(b=>{ const o=document.createElement('option'); o.value=b.name; o.textContent=`${b.name} — ${fmt(b.price)} лв`; typeSel.appendChild(o); });
+  }
+  populate();
 
-      const card = document.createElement('div');
-      card.className='accordion-item';
-      card.innerHTML=`
-        <h2 class="accordion-header" id="${id}-h">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${id}-c">
-            <span class="me-2 pill">#${idx+1}</span> <span class="me-2 shop-name">${item.shop||'Магазин'}</span>
-            <span class="ms-auto">Нетно: <strong><span class="net">0.00</span> лв</strong></span>
-          </button>
-        </h2>
-        <div id="${id}-c" class="accordion-collapse collapse" data-bs-parent="#salesAcc">
-          <div class="accordion-body">
-            <div class="row g-2">
-              <div class="col-12 col-md-4"><input class="form-control shop" placeholder="Име на магазин" value="${item.shop}"></div>
-              <div class="col-6 col-md-3"><input class="form-control gross" type="number" step="0.01" placeholder="Оборот" value="${item.gross}"></div>
-              <div class="col-6 col-md-3"><input class="form-control waste" type="number" step="0.01" placeholder="Брак" value="${item.waste}"></div>
-              <div class="col-12 col-md-2 d-grid"><button class="btn btn-outline-danger remove"><i class="bi bi-trash"></i></button></div>
-              <div class="col-12"><textarea class="form-control note" rows="2" placeholder="Бележка">${item.note}</textarea></div>
-            </div>
-          </div>
-        </div>`;
-      salesAcc.appendChild(card);
+  function syncUnit(){
+    const m = CFG.breadTypes.find(b=>b.name===typeSel.value);
+    if(m) unitI.value = m.price;
+  }
 
-      const shopInput = el('.shop',card), grossInput = el('.gross',card), wasteInput = el('.waste',card), noteInput = el('.note',card);
-      const netSpan = el('.net',card), shopName = el('.shop-name',card);
+  function rec(){
+    const idx = Array.from(container.children).indexOf(row);
+    const q = Number(qtyI.value)||0;
+    const u = Number(unitI.value)||0;
+    const t = q*u;
+    lines[idx] = {type:typeSel.value, qty:q, unit:u, total:t};
+    total.textContent = fmt(t);
+    onChange();
+  }
 
-      function recompute(){
-        item.shop = shopInput.value.trim(); item.gross = Number(grossInput.value)||0; item.waste = Number(wasteInput.value)||0; item.note = noteInput.value;
-        item.net = Math.max(0, item.gross - item.waste);
-        netSpan.textContent = fmt(item.net); shopName.textContent = item.shop||'Магазин';
-        updateSalesTotal(); saveAll();
-      }
-      [shopInput,grossInput,wasteInput,noteInput].forEach(i=>i.addEventListener('input',recompute));
-      el('.remove',card).addEventListener('click',()=>{ const pos = Array.from(salesAcc.children).indexOf(card); day.sales.splice(pos,1); card.remove(); updateSalesTotal(); saveAll(); });
-      recompute();
-    }
-    function updateSalesTotal(){ const total = current().sales.reduce((s,r)=>s+(Number(r.net)||0),0); el('#salesTotal').textContent = fmt(total); }
+  typeSel.addEventListener('change',()=>{syncUnit();rec();});
+  qtyI.addEventListener('input',rec);
+  unitI.addEventListener('input',rec);
+  el('.remove',row).addEventListener('click',()=>{
+    const pos = Array.from(container.children).indexOf(row);
+    lines.splice(pos,1);
+    row.remove();
+    onChange();
+  });
 
-    // === BREAD WASTE ===
-    const breadAcc = el('#breadAcc');
-    el('#addBreadRow').addEventListener('click',()=> addBreadShop());
+  syncUnit(); rec();
+}
 
-    function makeBreadLineRow(container, lines, onChange){
-      const row = document.createElement('div'); row.className='row g-2 align-items-center mb-1';
-      row.innerHTML=`
-        <div class="col-6 col-md-4"><select class="form-select type"></select></div>
-        <div class="col-3 col-md-2"><input type="number" step="1" min="0" class="form-control qty" placeholder="Бр."></div>
-        <div class="col-3 col-md-2"><input type="number" step="0.01" class="form-control unit" placeholder="Цена"></div>
-        <div class="col-12 col-md-3 text-end"><span>Общо: <strong class="lineTotal">0.00</strong> лв</span></div>
-        <div class="col-12 col-md-1 d-grid"><button class="btn btn-outline-danger remove"><i class="bi bi-x"></i></button></div>`;
-      container.appendChild(row);
+function updateBreadTotal(){
+  const total = current().breadWaste.reduce((s,rec)=> s + (rec.lines||[]).reduce((ss,l)=>ss+(l.total||0),0), 0);
+  el('#breadTotal').textContent = fmt(total);
+}
 
-      const typeSel = el('.type',row), qty=el('.qty',row), unit=el('.unit',row), total=el('.lineTotal',row);
+/* === DELIVERY (Доставка) === */
+const deliveryBody = el('#deliveryBody');
+el('#addDeliveryRow').addEventListener('click',()=> addDeliveryLine());
 
-      function populateTypes(selectedName){
-        typeSel.innerHTML='';
-        CFG.breadTypes.forEach(b=>{ const o=document.createElement('option'); o.value=b.name; o.textContent=`${b.name} — ${fmt(b.price)} лв`; typeSel.appendChild(o); });
-        if(selectedName){ typeSel.value = selectedName; }
-      }
-      populateTypes();
-      function syncUnit(){ const m=CFG.breadTypes.find(b=>b.name===typeSel.value); if(m){ unit.value=m.price; } }
-      function rec(){ const q=Number(qty.value)||0, u=Number(unit.value)||0; total.textContent=fmt(q*u); const pos=Array.from(container.children).indexOf(row); lines[pos] = {type:typeSel.value, qty:q, unit:u, total:q*u}; onChange(); }
-      typeSel.addEventListener('change',()=>{ syncUnit(); rec(); });
-      [qty,unit].forEach(e=>e.addEventListener('input',rec));
-      el('.remove',row).addEventListener('click',()=>{ const i=Array.from(container.children).indexOf(row); lines.splice(i,1); row.remove(); onChange(); });
-      syncUnit(); rec();
-      row._repopulateBreadTypes = function(){ const prev=typeSel.value; populateTypes(prev); if(!CFG.breadTypes.some(b=>b.name===typeSel.value)){ typeSel.selectedIndex=0; } syncUnit(); rec(); }
-    }
+function addDeliveryLine(data={item:CFG.deliveryItems[0]?.name||'', qty:0, unit:CFG.deliveryItems[0]?.price||0, total:0}, push=true){
+  const day=current();
+  if(push) day.delivery.push({...data});
+  const idx = day.delivery.indexOf(data);
+  const tr = document.createElement('tr');
+  tr.innerHTML=`
+    <td><select class="form-select item"></select></td>
+    <td><input type="number" class="form-control qty" min="0"></td>
+    <td><input type="number" class="form-control unit" step="0.01"></td>
+    <td class="text-end"><span class="lineTotal">0.00</span> лв</td>
+    <td class="text-end"><button class="btn btn-sm btn-outline-danger remove"><i class="bi bi-x"></i></button></td>`;
+  deliveryBody.appendChild(tr);
 
-    function addBreadShop(data={shop:'',lines:[]}, push=true){
-      const day=current();
-      const record = push ? (day.breadWaste.push({shop:data.shop||'', lines:[]}), day.breadWaste[day.breadWaste.length-1]) : data;
-      const idx = day.breadWaste.indexOf(record); const id='bw'+idx;
+  const itemSel=el('.item',tr), qtyI=el('.qty',tr), unitI=el('.unit',tr), total=el('.lineTotal',tr);
 
-      const card=document.createElement('div'); card.className='accordion-item';
-      card.innerHTML=`
-        <h2 class="accordion-header" id="${id}-h">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${id}-c">
-            <span class="me-2 pill">#${idx+1}</span> <span class="me-2 shop-name">${record.shop||'Магазин'}</span>
-            <span class="ms-auto">Сума: <strong><span class="sum">0.00</span> лв</strong></span>
-          </button>
-        </h2>
-        <div id="${id}-c" class="accordion-collapse collapse" data-bs-parent="#breadAcc">
-          <div class="accordion-body">
-            <div class="row g-2 mb-2">
-              <div class="col-12 col-md-6"><input class="form-control shop" placeholder="Име на магазин" value="${record.shop}"></div>
-              <div class="col-12 col-md-6 text-end"><button class="btn btn-outline-primary addLine"><i class="bi bi-plus-lg"></i> Добави артикул</button></div>
-            </div>
-            <div class="lines"></div>
-            <div class="text-end mt-2">Междинна сума: <strong><span class="sum2">0.00</span> лв</strong></div>
-            <div class="text-end mt-2"><button class="btn btn-outline-danger remove"><i class="bi bi-trash"></i> Премахни магазин</button></div>
-          </div>
-        </div>`;
-      breadAcc.appendChild(card);
-      const shopInput=el('.shop',card), shopName=el('.shop-name',card), sum=el('.sum',card), sum2=el('.sum2',card), linesWrap=el('.lines',card);
+  function populate(){
+    itemSel.innerHTML='';
+    CFG.deliveryItems.forEach(d=>{ const o=document.createElement('option'); o.value=d.name; o.textContent=`${d.name} — ${fmt(d.price)} лв`; itemSel.appendChild(o); });
+  }
+  populate();
 
-      function recompute(){
-        record.shop = shopInput.value.trim(); shopName.textContent=record.shop||'Магазин';
-        const total = (record.lines||[]).reduce((s,l)=>s+(Number(l.total)||0),0);
-        sum.textContent=fmt(total); sum2.textContent=fmt(total);
-        updateBreadTotal(); saveAll();
-      }
+  function rec(){
+    const i = Array.from(deliveryBody.children).indexOf(tr);
+    const q = Number(qtyI.value)||0;
+    const u = Number(unitI.value)||0;
+    const t = q*u;
+    day.delivery[i] = {item:itemSel.value, qty:q, unit:u, total:t};
+    total.textContent = fmt(t);
+    updateDeliveryTotals();
+    saveAll();
+  }
 
-      el('.addLine',card).addEventListener('click',()=>{ if(!record.lines) record.lines=[]; makeBreadLineRow(linesWrap, record.lines, recompute); });
-      el('.remove',card).addEventListener('click',()=>{ const pos=Array.from(breadAcc.children).indexOf(card); current().breadWaste.splice(pos,1); card.remove(); updateBreadTotal(); saveAll(); });
-      shopInput.addEventListener('input',recompute);
+  itemSel.addEventListener('change',()=>{
+    const m=CFG.deliveryItems.find(d=>d.name===itemSel.value);
+    if(m) unitI.value=m.price;
+    rec();
+  });
+  qtyI.addEventListener('input',rec);
+  unitI.addEventListener('input',rec);
+  el('.remove',tr).addEventListener('click',()=>{
+    const pos = Array.from(deliveryBody.children).indexOf(tr);
+    day.delivery.splice(pos,1);
+    tr.remove();
+    updateDeliveryTotals();
+    saveAll();
+  });
 
-      // hydrate preset lines
-      (data.lines||[]).forEach(l=>{ makeBreadLineRow(linesWrap, record.lines, recompute); const last=linesWrap.lastElementChild; el('.type',last).value=l.type; ['change'].forEach(ev=>el('.type',last).dispatchEvent(new Event(ev))); el('.qty',last).value=l.qty; el('.unit',last).value=l.unit; ['input'].forEach(ev=>el('.qty',last).dispatchEvent(new Event(ev))); });
-      recompute();
-    }
+  itemSel.value = data.item;
+  qtyI.value = data.qty;
+  unitI.value = data.unit;
+  rec();
+}
 
-    function updateBreadTotal(){ const total = current().breadWaste.reduce((s,rec)=> s + (rec.lines||[]).reduce((ss,l)=>ss+(Number(l.total)||0),0), 0); el('#breadTotal').textContent = fmt(total); }
+/* === DELIVERY WASTE (Брак артикули) === */
+const dwBody = el('#dwBody');
+el('#addDWRow').addEventListener('click',()=> addDWLine());
 
-    // === DELIVERY & DELIVERY WASTE ===
-    function makeLine(tbody, storeArray){
+function addDWLine(data={item:CFG.deliveryItems[0]?.name||'', qty:0, unit:CFG.deliveryItems[0]?.price||0, total:0}, push=true){
+  const day=current();
+  if(push) day.deliveryWaste.push({...data});
+  const tr = document.createElement('tr');
+  tr.innerHTML=`
+    <td><select class="form-select item"></select></td>
+    <td><input type="number" class="form-control qty" min="0"></td>
+    <td><input type="number" class="form-control unit" step="0.01"></td>
+    <td class="text-end"><span class="lineTotal">0.00</span> лв</td>
+    <td class="text-end"><button class="btn btn-sm btn-outline-danger remove"><i class="bi bi-x"></i></button></td>`;
+  dwBody.appendChild(tr);
+
+  const itemSel=el('.item',tr), qtyI=el('.qty',tr), unitI=el('.unit',tr), total=el('.lineTotal',tr);
+
+  function populate(){
+    itemSel.innerHTML='';
+    CFG.deliveryItems.forEach(d=>{ const o=document.createElement('option'); o.value=d.name; o.textContent=`${d.name} — ${fmt(d.price)} лв`; itemSel.appendChild(o); });
+  }
+  populate();
+
+  function rec(){
+    const i = Array.from(dwBody.children).indexOf(tr);
+    const q = Number(qtyI.value)||0;
+    const u = Number(unitI.value)||0;
+    const t = q*u;
+    day.deliveryWaste[i] = {item:itemSel.value, qty:q, unit:u, total:t};
+    total.textContent = fmt(t);
+    updateDeliveryTotals();
+    saveAll();
+  }
+
+  itemSel.addEventListener('change',()=>{
+    const m=CFG.deliveryItems.find(d=>d.name===itemSel.value);
+    if(m) unitI.value=m.price;
+    rec();
+  });
+  qtyI.addEventListener('input',rec);
+  unitI.addEventListener('input',rec);
+  el('.remove',tr).addEventListener('click',()=>{
+    const pos = Array.from(dwBody.children).indexOf(tr);
+    day.deliveryWaste.splice(pos,1);
+    tr.remove();
+    updateDeliveryTotals();
+    saveAll();
+  });
+
+  itemSel.value = data.item;
+  qtyI.value = data.qty;
+  unitI.value = data.unit;
+  rec();
+}
+
+function updateDeliveryTotals(){
+  const d = current();
+  const a = d.delivery.reduce((s,l)=>s+(l.total||0),0);
+  const b = d.deliveryWaste.reduce((s,l)=>s+(l.total||0),0);
+  el('#deliveryTotal').textContent = fmt(a);
+  el('#dwTotal').textContent = fmt(b);
+}
+// END PART 2B
+/* === DAYS (Архив) === */
+const daysTable = el('#daysTable');
+
+function refreshDaysTable(){
+  daysTable.innerHTML='';
+  Object.values(days)
+    .sort((a,b)=> b.date.localeCompare(a.date))
+    .forEach(d=>{
       const tr=document.createElement('tr');
       tr.innerHTML=`
-        <td><select class="form-select item"></select></td>
-        <td style="max-width:120px"><input type="number" min="0" step="1" class="form-control qty" placeholder="Бр."></td>
-        <td style="max-width:140px"><input type="number" step="0.01" class="form-control unit" placeholder="Цена"></td>
-        <td class="text-end"><span class="lineTotal">0.00</span> лв</td>
-        <td class="text-end"><button class="btn btn-sm btn-outline-danger remove"><i class="bi bi-x"></i></button></td>`;
-      tbody.appendChild(tr);
-
-      const itemSel=el('.item',tr), qty=el('.qty',tr), unit=el('.unit',tr), total=el('.lineTotal',tr);
-
-      function populateItems(selectedName){ itemSel.innerHTML=''; CFG.deliveryItems.forEach(d=>{ const o=document.createElement('option'); o.value=d.name; o.textContent=`${d.name} — ${fmt(d.price)} лв`; itemSel.appendChild(o); }); if(selectedName){ itemSel.value = selectedName; } }
-      populateItems();
-
-      function syncUnit(){ const match = CFG.deliveryItems.find(d=>d.name===itemSel.value); if(match){ unit.value = match.price; } }
-      function rec(){ const q=Number(qty.value)||0; const u=Number(unit.value)||0; total.textContent=fmt(q*u); storeArray[Array.from(tbody.children).indexOf(tr)]={item:itemSel.value, qty:q, unit:u, total:q*u}; saveAll(); updateDeliveryTotals(); }
-
-      itemSel.addEventListener('change',()=>{ syncUnit(); rec(); });
-      [qty,unit].forEach(i=>i.addEventListener('input',rec));
-      el('.remove',tr).addEventListener('click',()=>{ const i=Array.from(tbody.children).indexOf(tr); storeArray.splice(i,1); tr.remove(); saveAll(); updateDeliveryTotals(); });
-
-      syncUnit(); rec();
-      tr._repopulateDeliveryItems = function(){ const prev=itemSel.value; populateItems(prev); if(!CFG.deliveryItems.some(d=>d.name===itemSel.value)){ itemSel.selectedIndex=0; } syncUnit(); rec(); }
-    }
-
-    const deliveryBody=el('#deliveryBody'); const dwBody=el('#dwBody');
-    el('#addDeliveryRow').addEventListener('click',()=> makeLine(deliveryBody, current().delivery));
-    el('#addDWRow').addEventListener('click',()=> makeLine(dwBody, current().deliveryWaste));
-    function updateDeliveryTotals(){ el('#deliveryTotal').textContent = fmt(current().delivery.reduce((s,l)=>s+(Number(l.total)||0),0)); el('#dwTotal').textContent = fmt(current().deliveryWaste.reduce((s,l)=>s+(Number(l.total)||0),0)); }
-
-    // === DAYS table & actions ===
-    const daysTable=el('#daysTable');
-    function refreshDaysTable(){
-      daysTable.innerHTML='';
-      Object.values(days).sort((a,b)=> b.date.localeCompare(a.date)).forEach(d=>{
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${d.date}</td><td>${d.locked?'<span class="badge text-bg-warning">заключен</span>':'<span class="badge text-bg-success">отворен</span>'}</td><td class="text-end">
-        <button class="btn btn-sm btn-outline-primary view" data-date="${d.date}"><i class="bi bi-eye"></i></button>
-        <button class="btn btn-sm btn-outline-secondary load" data-date="${d.date}"><i class="bi bi-box-arrow-in-down"></i></button>
+        <td>${d.date}</td>
+        <td>${d.locked?'<span class="badge text-bg-warning">заключен</span>':'<span class="badge text-bg-success">отворен</span>'}</td>
+        <td class="text-end">
+          <button class="btn btn-sm btn-outline-primary view" data-date="${d.date}"><i class="bi bi-eye"></i></button>
+          <button class="btn btn-sm btn-outline-secondary load" data-date="${d.date}"><i class="bi bi-box-arrow-in-down"></i></button>
+          <button class="btn btn-sm btn-outline-danger del" data-date="${d.date}"><i class="bi bi-trash"></i></button>
         </td>`;
-        daysTable.appendChild(tr);
-      });
-      els('.view',daysTable).forEach(b=>b.addEventListener('click',()=> openReview(b.dataset.date)));
-      els('.load',daysTable).forEach(b=>b.addEventListener('click',()=>{ datePicker.value=b.dataset.date; hydrateAll(); }));
-    }
-
-    // === Review Modal content ===
-    function openReview(date){
-      const d = getDay(date); el('#revDate').textContent = date; const div = el('#reviewContent');
-      const sTotal = d.sales.reduce((s,r)=>s+(Number(r.net)||0),0);
-      const bwTotal = d.breadWaste.reduce((s,rec)=> s + (rec.lines||[]).reduce((ss,l)=>ss+(Number(l.total)||0),0), 0);
-      const delTotal = d.delivery.reduce((s,l)=>s+(Number(l.total)||0),0);
-      const dwTotal = d.deliveryWaste.reduce((s,l)=>s+(Number(l.total)||0),0);
-
-      let html = '';
-      html += `<div class=\"mb-2\"><strong>Краен оборот (след брак):</strong> ${fmt(sTotal)} лв</div>`;
-      html += `<div class=\"mb-2\"><strong>Брак хляб (инфо, не спада):</strong> ${fmt(bwTotal)} лв</div>`;
-      html += `<div class=\"mb-2\"><strong>Доставки:</strong> ${fmt(delTotal)} лв</div>`;
-      html += `<div class=\"mb-3\"><strong>Брак (артикули):</strong> ${fmt(dwTotal)} лв</div><hr>`;
-
-      if(CFG.reviewShow.sales){ html += `<h6>Продажба</h6>` + (d.sales.map((r,i)=>`<div class=\"mb-1\">#${i+1} <strong>${r.shop||'Магазин'}</strong> — Оборот: ${fmt(r.gross)} | Брак: ${fmt(r.waste)} | Нетно: ${fmt(r.net)} ${r.note?('<br><em>'+r.note.replace(/</g,'&lt;')+'</em>'):''}</div>`).join('')||'<div class=\"text-muted\">Няма записи</div>') + '<hr>'; }
-      if(CFG.reviewShow.breadWaste){ html += `<h6>Брак хляб</h6>` + (d.breadWaste.map((rec,i)=>`<div class=\"mb-1\">#${i+1} <strong>${rec.shop||'Магазин'}</strong><br>${(rec.lines||[]).map(l=>`${l.type}: ${l.qty} × ${fmt(l.unit)} = ${fmt(l.total)} лв`).join('<br>')}</div>`).join('')||'<div class=\"text-muted\">Няма записи</div>') + '<hr>'; }
-      if(CFG.reviewShow.delivery){ html += `<h6>Доставка</h6>` + ((d.delivery||[]).map(l=>`${l.item}: ${l.qty} × ${fmt(l.unit)} = ${fmt(l.total)} лв`).join('<br>')||'<div class=\"text-muted\">Няма записи</div>') + '<hr>'; }
-      if(CFG.reviewShow.deliveryWaste){ html += `<h6>Брак (артикули)</h6>` + ((d.deliveryWaste||[]).map(l=>`${l.item}: ${l.qty} × ${fmt(l.unit)} = ${fmt(l.total)} лв`).join('<br>')||'<div class=\"text-muted\">Няма записи</div>'); }
-
-      div.innerHTML = html;
-      new bootstrap.Modal('#reviewModal').show();
-    }
-
-    el('#reviewBtn').addEventListener('click',()=> openReview(datePicker.value));
-
-    // === Save/Close/Unlock ===
-    el('#saveDay').addEventListener('click',()=>{ days[current().date]=current(); saveAll(); alert('Денят е запазен.'); });
-
-    el('#closeDay').addEventListener('click',()=>{
-      // 1) Lock & save archive for selected date
-      const d = current(); d.locked = true; saveAll();
-      // 2) Prepare next day immediately (clear UI for нов ден)
-      const next = addDaysISO(d.date, 1);
-      datePicker.value = next;
-      hydrateAll();
-      alert('Денят е приключен. Подготвен е празен запис за следващия ден.');
+      daysTable.appendChild(tr);
     });
 
-    el('#unlockDay').addEventListener('click',()=>{ current().locked=false; saveAll(); alert('Денят е отключен.'); });
+  els('.view',daysTable).forEach(b=>b.addEventListener('click',()=> openReview(b.dataset.date)));
+  els('.load',daysTable).forEach(b=>b.addEventListener('click',()=>{ datePicker.value=b.dataset.date; hydrateAll(); }));
+  els('.del',daysTable).forEach(b=>b.addEventListener('click',()=> deleteDay(b.dataset.date)));
+}
 
-    // === Export / Import / Wipe ===
-    el('#exportBtn').addEventListener('click',()=>{ const blob = new Blob([JSON.stringify(days,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='sales-bread-archive.json'; a.click(); URL.revokeObjectURL(a.href); });
-    el('#importInput').addEventListener('change',async (e)=>{ const f=e.target.files[0]; if(!f) return; const txt=await f.text(); try{ const obj=JSON.parse(txt); if(typeof obj==='object'){ days=obj; saveAll(); hydrateAll(); alert('Импортът е успешен.'); } }catch(err){ alert('Невалиден JSON.'); } e.target.value=''; });
-    el('#wipeAll').addEventListener('click',()=>{ if(confirm('Сигурни ли сте? Това ще изтрие всички локални данни.')){ days={}; saveAll(); hydrateAll(); }});
+function deleteDay(date){
+  if(!confirm(`Да изтрия деня ${date}? Това не може да бъде отменено.`)) return;
+  delete days[date];
+  saveAll();
+  refreshDaysTable();
+}
 
-    // === Hydration / Re-render ===
-    datePicker.addEventListener('change',()=>{ localStorage.setItem(LAST_OPEN_KEY, datePicker.value); hydrateAll(); });
+/* === REVIEW MODAL (Преглед на ден) === */
+el('#reviewBtn').addEventListener('click',()=> openReview(datePicker.value));
 
-    function hydrateAll(){
-      // clear UIs
-      el('#salesAcc').innerHTML=''; el('#breadAcc').innerHTML=''; el('#deliveryBody').innerHTML=''; el('#dwBody').innerHTML='';
-      const d=current();
-      // SALES
-      (d.sales||[]).forEach(item=> addSaleRow(item, /*push*/ false)); updateSalesTotal();
-      // BREAD WASTE
-      (d.breadWaste||[]).forEach(rec=> addBreadShop(rec, /*push*/ false)); updateBreadTotal();
-      // DELIVERY
-      (d.delivery||[]).forEach(()=> makeLine(el('#deliveryBody'), d.delivery));
-      (d.deliveryWaste||[]).forEach(()=> makeLine(el('#dwBody'), d.deliveryWaste));
-      // refill values for delivery tables
-      [...el('#deliveryBody').children].forEach((tr,i)=>{ el('.item',tr).value=d.delivery[i].item; ['change'].forEach(ev=>el('.item',tr).dispatchEvent(new Event(ev))); el('.qty',tr).value=d.delivery[i].qty; el('.unit',tr).value=d.delivery[i].unit; ['input'].forEach(ev=>el('.qty',tr).dispatchEvent(new Event(ev))); });
-      [...el('#dwBody').children].forEach((tr,i)=>{ el('.item',tr).value=d.deliveryWaste[i].item; ['change'].forEach(ev=>el('.item',tr).dispatchEvent(new Event(ev))); el('.qty',tr).value=d.deliveryWaste[i].qty; el('.unit',tr).value=d.deliveryWaste[i].unit; ['input'].forEach(ev=>el('.qty',tr).dispatchEvent(new Event(ev))); });
-      refreshDaysTable(); syncLockBadge(); updateDeliveryTotals(); applyVisibility();
-      seedAnalyticsDates(); computeAnalytics();
-    }
+function openReview(date){
+  const d = getDay(date);
+  el('#revDate').textContent = date;
 
-    // === Admin Panel ===
-    const adminModal = new bootstrap.Modal('#adminModal');
-    el('#openAdmin').addEventListener('click',()=>{ loadAdminUI(); adminModal.show(); });
-    el('#openAdmin2').addEventListener('click',()=>{ loadAdminUI(); adminModal.show(); });
+  const sTotal = d.sales.reduce((s,r)=>s+(r.net||0),0);
+  const bwTotal = d.breadWaste.reduce((s,rec)=> s + (rec.lines||[]).reduce((ss,l)=>ss+(l.total||0),0), 0);
+  const delTotal = d.delivery.reduce((s,l)=>s+(l.total||0),0);
+  const dwTotal = d.deliveryWaste.reduce((s,l)=>s+(l.total||0),0);
 
-    function loadAdminUI(){
-      els('#adminModal .vis').forEach(ch=>{ ch.checked = !!CFG.showSections[ch.dataset.section]; });
-      els('#adminModal .rev').forEach(ch=>{ ch.checked = !!CFG.reviewShow[ch.dataset.key]; });
-      renderPriceTable('breadTypesTbl', CFG.breadTypes);
-      renderPriceTable('deliveryItemsTbl', CFG.deliveryItems);
-    }
-    function renderPriceTable(tblId, arr){ const tbody = el('#'+tblId+' tbody'); tbody.innerHTML=''; arr.forEach(row=> addPriceRow(tbody, arr, row.name, row.price)); }
-    function addPriceRow(tbody, arr, name='', price=''){ const tr=document.createElement('tr'); tr.innerHTML=`<td><input class="form-control name" value="${name}"></td><td style="max-width:160px"><input class="form-control price" type="number" step="0.01" value="${price}"></td><td class="text-end"><button class="btn btn-sm btn-outline-danger rm"><i class="bi bi-x"></i></button></td>`; tbody.appendChild(tr); el('.rm',tr).addEventListener('click',()=>{ const i=[...tbody.children].indexOf(tr); arr.splice(i,1); tr.remove(); }); }
-    el('#addBreadType').addEventListener('click',()=> addPriceRow(el('#breadTypesTbl tbody'), CFG.breadTypes, '', ''));
-    el('#addDeliveryItem').addEventListener('click',()=> addPriceRow(el('#deliveryItemsTbl tbody'), CFG.deliveryItems, '', ''));
-    el('#saveAdmin').addEventListener('click',()=>{
-      function collect(tblId){ return [...el('#'+tblId+' tbody').children].map(r=>({ name: el('.name',r).value.trim(), price: Number(el('.price',r).value)||0 })).filter(x=>x.name); }
-      CFG.breadTypes = collect('breadTypesTbl');
-      CFG.deliveryItems = collect('deliveryItemsTbl');
-      els('#adminModal .vis').forEach(ch=> CFG.showSections[ch.dataset.section] = ch.checked );
-      els('#adminModal .rev').forEach(ch=> CFG.reviewShow[ch.dataset.key] = ch.checked );
-      saveCfg(CFG);
-      // refresh selects
-      els('#breadAcc .lines > div').forEach(row=> row._repopulateBreadTypes && row._repopulateBreadTypes());
-      els('#deliveryBody tr').forEach(tr=> tr._repopulateDeliveryItems && tr._repopulateDeliveryItems());
-      els('#dwBody tr').forEach(tr=> tr._repopulateDeliveryItems && tr._repopulateDeliveryItems());
-      applyVisibility();
-      alert('Настройките са записани.');
-      adminModal.hide();
-    });
+  let html = `
+    <div><strong>Нетен оборот:</strong> ${fmt(sTotal)} лв</div>
+    <div><strong>Брак хляб (не вади):</strong> ${fmt(bwTotal)} лв</div>
+    <div><strong>Доставки:</strong> ${fmt(delTotal)} лв</div>
+    <div><strong>Брак артикули:</strong> ${fmt(dwTotal)} лв</div>
+    <hr>
+  `;
 
-    // === Analytics (week / month) ===
-    const fromDate = el('#fromDate'); const toDate = el('#toDate');
-    function startOfISOWeek(d){ const day=(d.getDay()+6)%7; const nd=new Date(d); nd.setDate(nd.getDate()-day); nd.setHours(0,0,0,0); return nd; }
-    function endOfISOWeek(d){ const s=startOfISOWeek(d); const nd=new Date(s); nd.setDate(s.getDate()+6); return nd; }
-    function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
-    function endOfMonth(d){ return new Date(d.getFullYear(), d.getMonth()+1, 0); }
-
-    function seedAnalyticsDates(){
-      const now = new Date(datePicker.value+'T00:00:00');
-      const s = startOfISOWeek(now), e = endOfISOWeek(now);
-      fromDate.value = s.toISOString().slice(0,10);
-      toDate.value = e.toISOString().slice(0,10);
-      el('#rWeek').checked = true; el('#rMonth').checked = false;
-    }
-    function computeAnalytics(){
-      const f = new Date(fromDate.value+'T00:00:00'); const t = new Date(toDate.value+'T23:59:59');
-      let gross=0, waste=0, net=0;
-      Object.values(days).forEach(d=>{
-        const dd = new Date(d.date+'T12:00:00');
-        if(dd>=f && dd<=t){
-          d.sales.forEach(r=>{ gross += Number(r.gross)||0; waste += Number(r.waste)||0; net += Number(r.net)||0; });
-        }
-      });
-      el('#anGross').textContent = fmt(gross);
-      el('#anWaste').textContent = fmt(waste);
-      el('#anNet').textContent = fmt(net);
-    }
-    ['change','input'].forEach(ev=>{ fromDate.addEventListener(ev,computeAnalytics); toDate.addEventListener(ev,computeAnalytics); });
-    el('#rWeek').addEventListener('change',()=>{ if(el('#rWeek').checked){ const now=new Date(datePicker.value+'T00:00:00'); fromDate.value=startOfISOWeek(now).toISOString().slice(0,10); toDate.value=endOfISOWeek(now).toISOString().slice(0,10); computeAnalytics(); }});
-    el('#rMonth').addEventListener('change',()=>{ if(el('#rMonth').checked){ const now=new Date(datePicker.value+'T00:00:00'); fromDate.value=startOfMonth(now).toISOString().slice(0,10); toDate.value=endOfMonth(now).toISOString().slice(0,10); computeAnalytics(); }});
-
-    // === Initial render ===
-    hydrateAll();
-  </script>
-  <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/Mobile-App/sw.js')
-      .catch(err => console.log('SW registration failed:', err));
+  if(CFG.reviewShow.sales){
+    html += `<h6>Продажба:</h6>` + (d.sales.map((r,i)=>`#${i+1} ${r.shop} → Оборот ${fmt(r.gross)} / Брак ${fmt(r.waste)} / Нетно ${fmt(r.net)}`).join('<br>') || '<em>Няма</em>') + '<hr>';
   }
-</script>
+  if(CFG.reviewShow.breadWaste){
+    html += `<h6>Брак хляб:</h6>` + (d.breadWaste.map((r,i)=>`#${i+1} ${r.shop}<br>${(r.lines||[]).map(l=>`${l.type}: ${l.qty}×${fmt(l.unit)} = ${fmt(l.total)} лв`).join('<br>')}`).join('<br><br>') || '<em>Няма</em>') + '<hr>';
+  }
+  if(CFG.reviewShow.delivery){
+    html += `<h6>Доставка:</h6>` + ((d.delivery||[]).map(l=>`${l.item}: ${l.qty}×${fmt(l.unit)} = ${fmt(l.total)} лв`).join('<br>') || '<em>Няма</em>') + '<hr>';
+  }
+  if(CFG.reviewShow.deliveryWaste){
+    html += `<h6>Брак артикули:</h6>` + ((d.deliveryWaste||[]).map(l=>`${l.item}: ${l.qty}×${fmt(l.unit)} = ${fmt(l.total)} лв`).join('<br>') || '<em>Няма</em>');
+  }
 
+  el('#reviewContent').innerHTML = html;
+  new bootstrap.Modal('#reviewModal').show();
+}
+
+/* === ADMIN PANEL (PIN) === */
+el('#openAdmin').addEventListener('click',()=> adminAccess());
+el('#openAdmin2')?.addEventListener('click',()=> adminAccess());
+
+function adminAccess(){
+  const pin = prompt('Въведи PIN:');
+  if(pin !== ADMIN_PIN) return;
+  loadAdminUI();
+  new bootstrap.Modal('#adminModal').show();
+}
+
+/* === ЗАПАЗВАНЕ / ПРИКЛЮЧВАНЕ / ОТКЛЮЧВАНЕ НА ДЕН === */
+
+el('#saveDay').addEventListener('click',()=>{
+  days[current().date]=current();
+  saveAll();
+  alert('Денят е запазен.');
+});
+
+el('#closeDay').addEventListener('click',()=>{
+  const d = current();
+  d.locked = true;
+  saveAll();
+
+  // автоматично следващ ден
+  const next = addDaysISO(d.date, 1);
+  datePicker.value = next;
+
+  // създаваме празен ден без да копираме стария (важно за да няма дублиране)
+  if(!days[next]) days[next] = blankDay(next);
+  saveAll();
+  hydrateAll();
+
+  alert(`Ден ${d.date} е приключен.\nСтартиран е нов ден: ${next}`);
+});
+
+el('#unlockDay').addEventListener('click',()=>{
+  current().locked = false;
+  saveAll();
+  alert('Денят е отключен и може да се редактира.');
+});
+
+
+/* === АНАЛИЗ (СЕДМИЦА / МЕСЕЦ / РЪЧНИ ДАТИ) === */
+
+const fromDate = el('#fromDate');
+const toDate   = el('#toDate');
+
+function computeAnalytics(){
+  const f = new Date(fromDate.value+'T00:00:00');
+  const t = new Date(toDate.value+'T23:59:59');
+
+  let gross=0, waste=0, net=0;
+
+  Object.values(days).forEach(d=>{
+    const dd = new Date(d.date+'T12:00:00');
+    if(dd>=f && dd<=t){
+      d.sales.forEach(r=>{
+        gross += Number(r.gross)||0;
+        waste += Number(r.waste)||0;
+        net   += Number(r.net)||0;
+      });
+    }
+  });
+
+  el('#anGross').textContent = fmt(gross);
+  el('#anWaste').textContent = fmt(waste);
+  el('#anNet').textContent   = fmt(net);
+}
+
+['change','input'].forEach(ev=>{
+  fromDate.addEventListener(ev, computeAnalytics);
+  toDate.addEventListener(ev, computeAnalytics);
+});
+
+/* Седмица по ISO */
+function startOfISOWeek(date){
+  const d=new Date(date);
+  const day=(d.getDay()+6)%7;
+  d.setDate(d.getDate()-day);
+  return d;
+}
+function endOfISOWeek(date){
+  const s=startOfISOWeek(date);
+  const d=new Date(s);
+  d.setDate(s.getDate()+6);
+  return d;
+}
+
+/* Месец */
+function startOfMonth(date){ return new Date(date.getFullYear(), date.getMonth(), 1); }
+function endOfMonth(date){ return new Date(date.getFullYear(), date.getMonth()+1, 0); }
+
+el('#rWeek').addEventListener('change',()=>{
+  if(!el('#rWeek').checked) return;
+  const now = new Date(datePicker.value+'T00:00:00');
+  fromDate.value = startOfISOWeek(now).toISOString().slice(0,10);
+  toDate.value   = endOfISOWeek(now).toISOString().slice(0,10);
+  computeAnalytics();
+});
+
+el('#rMonth').addEventListener('change',()=>{
+  if(!el('#rMonth').checked) return;
+  const now = new Date(datePicker.value+'T00:00:00');
+  fromDate.value = startOfMonth(now).toISOString().slice(0,10);
+  toDate.value   = endOfMonth(now).toISOString().slice(0,10);
+  computeAnalytics();
+});
+
+
+/* === HYDRATE (ФИКСИРАН — БЕЗ ДУБЛИРАНЕ) === */
+
+function hydrateAll(){
+
+  const d = current();
+
+  // изчистваме UI напълно (това е ключът към липсата на дублиране)
+  el('#salesAcc').innerHTML='';
+  el('#breadAcc').innerHTML='';
+  el('#deliveryBody').innerHTML='';
+  el('#dwBody').innerHTML='';
+
+  // Продажба
+  (d.sales||[]).forEach(rec=> addSaleRow(rec, false));
+  updateSalesTotal();
+
+  // Брак хляб
+  (d.breadWaste||[]).forEach(rec=> addBreadShop(rec, false));
+  updateBreadTotal();
+
+  // Доставка
+  (d.delivery||[]).forEach(()=> makeLine(el('#deliveryBody'), d.delivery));
+  [...el('#deliveryBody').children].forEach((tr,i)=>{
+    el('.item',tr).value = d.delivery[i].item;
+    el('.qty',tr).value = d.delivery[i].qty;
+    el('.unit',tr).value = d.delivery[i].unit;
+    el('.qty',tr).dispatchEvent(new Event('input'));
+  });
+
+  // Брак от доставка
+  (d.deliveryWaste||[]).forEach(()=> makeLine(el('#dwBody'), d.deliveryWaste));
+  [...el('#dwBody').children].forEach((tr,i)=>{
+    el('.item',tr).value = d.deliveryWaste[i].item;
+    el('.qty',tr).value = d.deliveryWaste[i].qty;
+    el('.unit',tr).value = d.deliveryWaste[i].unit;
+    el('.qty',tr).dispatchEvent(new Event('input'));
+  });
+
+  refreshDaysTable();
+  updateDeliveryTotals();
+  syncLockBadge();
+  applyVisibility();
+  computeAnalytics();
+}
+
+/* === START === */
+hydrateAll();
+
+/* === SERVICE WORKER (PWA / OFFLINE) === */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js')
+    .catch(err => console.log('SW registration failed:', err));
+}
+
+/* === iOS FULLSCREEN PWA HINT === */
+window.addEventListener('load', () => {
+  // remove 300ms click delay on iOS
+  document.body.style.cursor = 'pointer';
+});
+
+</script>
 </body>
 </html>
